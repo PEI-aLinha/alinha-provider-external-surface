@@ -1,2 +1,2 @@
--- Schema próprio do plugin External Surface. Nenhum outro módulo lê estas tabelas.
+-- Own schema of the External Surface plugin. No other module reads these tables.
 create schema if not exists externalsurface;

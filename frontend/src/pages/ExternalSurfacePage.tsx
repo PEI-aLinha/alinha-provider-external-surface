@@ -11,7 +11,7 @@ export function ExternalSurfacePage() {
 
   return (
     <>
-      <PageHeader title="External Surface" />
+      <PageHeader title="Superfície externa" />
       <p>Backend: {ping.isPending ? 'a verificar…' : ping.isError ? 'indisponível' : ping.data.status}</p>
     </>
   )

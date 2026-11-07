@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/external-surface")
 class ExternalSurfaceController {
 
-    /** Walking skeleton: prova que o plugin está carregado de ponta a ponta. */
+    /** Walking skeleton: proves the plugin is wired end to end. */
     @GetMapping("/ping")
     fun ping() = mapOf("plugin" to "external-surface", "status" to "ok")
 }
