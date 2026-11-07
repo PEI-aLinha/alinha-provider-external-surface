@@ -1,0 +1,10 @@
+# Manifest do plugin — manter igual a ExternalSurfacePlugin.kt (backend).
+id: external-surface
+name: "External Surface"
+kind: provider
+version: 0.1.0
+# Onde este repo fica como submodule dentro do repo principal (PEI-aLinha/alinha)
+path: plugins/provider/external-surface
+publishes: []     # eventos que publica (ex.: AssessmentSubmitted)
+consumes: []      # eventos que consome
+permissions: []   # recursos RBAC (ex.: assessment:read, assessment:edit)
