@@ -1,4 +1,5 @@
 import { definePlugin } from '@alinha/plugin-sdk'
+import { Globe } from 'lucide-react'
 import { ExternalSurfacePage } from './pages/ExternalSurfacePage'
 
 /**
@@ -18,6 +19,6 @@ export default definePlugin({
     ],
   },
   nav: [
-    { label: 'Superfície externa', path: 'integrations/external-surface', area: 'client' },
+    { label: 'Superfície externa', path: 'integrations/external-surface', area: 'client', icon: Globe, order: 71 },
   ],
 })
