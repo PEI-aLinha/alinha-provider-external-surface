@@ -11,7 +11,8 @@
   "dependencies": {
     "@alinha/api-client": "workspace:*",
     "@alinha/plugin-sdk": "workspace:*",
-    "@alinha/ui": "workspace:*"
+    "@alinha/ui": "workspace:*",
+    "lucide-react": "^1.61.0"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.104.5",
