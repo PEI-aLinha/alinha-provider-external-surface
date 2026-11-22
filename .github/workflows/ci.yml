@@ -19,4 +19,6 @@ jobs:
       plugin-path: plugins/provider/external-surface
       gradle-project: external-surface
       npm-package: "@alinha/plugin-external-surface"
-    secrets: inherit   # ALINHA_READ_TOKEN (private repos only), SONAR_TOKEN
+    secrets:
+      ALINHA_READ_TOKEN: ${{ secrets.ALINHA_READ_TOKEN }}   # private repos only
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
