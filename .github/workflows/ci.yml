@@ -1,4 +1,6 @@
-# Tests THIS plugin inside the main repo (which has the core and the other plugins).
+# Tests THIS plugin inside the main repo (which has the core and the other plugins) and sends the analysis
+# and coverage to this repo's SonarCloud project. The steps live in the main repo:
+# PEI-aLinha/alinha/.github/workflows/plugin-ci.yml
 name: CI
 
 on:
@@ -6,65 +8,17 @@ on:
   push:
     branches: [main]
 
-env:
-  PLUGIN_PATH: plugins/provider/external-surface
-  GRADLE_PROJECT: external-surface
-  NPM_PACKAGE: "@alinha/plugin-external-surface"
+permissions:
+  contents: read
+  pull-requests: read   # SonarCloud PR decoration
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      # A coordinated change (README procedure, or a new frontend dependency that needs the main repo's
-      # pnpm-lock.yaml) has a main repo branch with the same name: test against it when it exists.
-      - name: Pick the main repo branch
-        id: main-ref
-        env:
-          BRANCH: ${{ github.head_ref || github.ref_name }}
-        run: |
-          if git ls-remote --exit-code --heads https://github.com/PEI-aLinha/alinha.git "$BRANCH" >/dev/null; then
-            echo "ref=$BRANCH" >> "$GITHUB_OUTPUT"
-          else
-            echo "ref=main" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Check out the main repo with every plugin
-        uses: actions/checkout@v4
-        with:
-          repository: PEI-aLinha/alinha
-          ref: ${{ steps.main-ref.outputs.ref }}
-          submodules: recursive
-          token: ${{ secrets.ALINHA_READ_TOKEN || github.token }}   # only needed for private repos
-
-      - name: Put this commit in place of the submodule
-        run: |
-          cd "$PLUGIN_PATH"
-          sha="${{ github.event.pull_request.head.sha || github.sha }}"
-          git fetch -q origin "$sha"
-          git checkout -q --detach "$sha"
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
-      - name: Backend + module verification
-        run: ./gradlew ":$GRADLE_PROJECT:build" :app:test
-
-      # pnpm version comes from packageManager in the main repo's package.json
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Frontend
-        run: |
-          pnpm install
-          pnpm gen:plugins
-          pnpm --filter "$NPM_PACKAGE" typecheck
-          pnpm lint
-
-      - name: Worker (providers)
-        if: hashFiles(format('{0}/worker/pyproject.toml', env.PLUGIN_PATH)) != ''
-        run: |
-          python3 -m pip install -q -e "$PLUGIN_PATH/worker[dev]"
-          python3 -m pytest -q "$PLUGIN_PATH/worker"
+  ci:
+    uses: PEI-aLinha/alinha/.github/workflows/plugin-ci.yml@main
+    with:
+      plugin-path: plugins/provider/external-surface
+      gradle-project: external-surface
+      npm-package: "@alinha/plugin-external-surface"
+    secrets:
+      ALINHA_READ_TOKEN: ${{ secrets.ALINHA_READ_TOKEN }}   # private repos only
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
