@@ -15,10 +15,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # A coordinated change (README procedure, or a new frontend dependency that needs the main repo's
+      # pnpm-lock.yaml) has a main repo branch with the same name: test against it when it exists.
+      - name: Pick the main repo branch
+        id: main-ref
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          if git ls-remote --exit-code --heads https://github.com/PEI-aLinha/alinha.git "$BRANCH" >/dev/null; then
+            echo "ref=$BRANCH" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=main" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check out the main repo with every plugin
         uses: actions/checkout@v4
         with:
           repository: PEI-aLinha/alinha
+          ref: ${{ steps.main-ref.outputs.ref }}
           submodules: recursive
           token: ${{ secrets.ALINHA_READ_TOKEN || github.token }}   # only needed for private repos
 
@@ -37,9 +51,8 @@ jobs:
       - name: Backend + module verification
         run: ./gradlew ":$GRADLE_PROJECT:build" :app:test
 
+      # pnpm version comes from packageManager in the main repo's package.json
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22

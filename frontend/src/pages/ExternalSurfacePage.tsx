@@ -1,18 +1,13 @@
-import { useQuery } from '@tanstack/react-query'
-import { useHost } from '@alinha/plugin-sdk'
-import { PageHeader } from '@alinha/ui'
+import { Globe } from 'lucide-react'
+import { EmptyState, PageHeader } from '@alinha/ui'
 
 export function ExternalSurfacePage() {
-  const { api } = useHost()
-  const ping = useQuery({
-    queryKey: ['external-surface', 'ping'],
-    queryFn: () => api<{ plugin: string; status: string }>('/external-surface/ping'),
-  })
-
   return (
     <>
-      <PageHeader title="Superfície externa" />
-      <p>Backend: {ping.isPending ? 'a verificar…' : ping.isError ? 'indisponível' : ping.data.status}</p>
+      <PageHeader title="Superfície externa" subtitle="O que está visível da sua organização na Internet." />
+      <EmptyState icon={<Globe className="size-5" aria-hidden />} title="Em construção">
+        Aqui vai poder indicar os sites e domínios da sua organização para verificarmos, de fora, se há falhas de segurança visíveis na Internet.
+      </EmptyState>
     </>
   )
 }
