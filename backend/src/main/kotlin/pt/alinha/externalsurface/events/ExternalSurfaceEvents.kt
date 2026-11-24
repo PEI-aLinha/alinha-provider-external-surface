@@ -1,10 +1,4 @@
 package pt.alinha.externalsurface.events
 
-// Events published by this plugin (listed in plugin.yaml > publishes).
-// Example:
-//
-// data class SomethingHappened(
-//     override val tenantId: TenantId,
-//     val somethingId: UUID,
-//     override val occurredAt: Instant = Instant.now(),
-// ) : DomainEvent
+// This plugin publishes no events of its own: it announces each stored evidence with the shared
+// pt.alinha.pluginapi.EvidenceCollected (plugin-api), and consumers read it through ExternalSurfaceApi.
