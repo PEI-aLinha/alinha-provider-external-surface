@@ -3,10 +3,14 @@
 name = "alinha-external-surface"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = []
+# Pure-Python wheel: the worker image installs wheels only (workers/job_consumer/Dockerfile).
+dependencies = ["dnspython>=2.6,<3"]
 
 [project.optional-dependencies]
 dev = ["pytest"]
+
+[project.entry-points."alinha.collectors"]
+external-surface = "alinha_externalsurface.collector:collect"
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -14,3 +18,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# The legacy-TLS probe offers TLS 1.0/1.1 on purpose (tls_checks.legacy_context).
+filterwarnings = ["ignore:ssl.TLSVersion.TLSv1:DeprecationWarning"]
