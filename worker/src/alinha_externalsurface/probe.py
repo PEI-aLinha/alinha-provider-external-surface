@@ -16,8 +16,8 @@ TIMEOUT_S = 5.0
 
 class Probe(Protocol):
     def address(self, host: str) -> str:
-        """The host's public address. Raises TransientError when it does not resolve, CollectorError
-        `host_not_allowed` when it is not public."""
+        """The host's public address. Raises TransientError when the lookup fails, CollectorError `host_not_found`
+        when the name does not exist and `host_not_allowed` when it is not public."""
         ...
 
     def handshake(self, host: str, address: str, context: ssl.SSLContext) -> net.TlsInfo: ...

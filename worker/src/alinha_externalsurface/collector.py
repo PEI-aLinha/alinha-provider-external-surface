@@ -99,7 +99,9 @@ def _host(probe: Probe, host: str, role: str, hosts: set[str], now: datetime) ->
         address = probe.address(host)
     except TransientError:
         return None if role == "www" else unknown_for(checks, "no_address")
-    except CollectorError:
+    except CollectorError as error:
+        if error.code == "host_not_found":  # the name does not exist
+            return None if role == "www" else unknown_for(checks, "no_address")
         return unknown_for(checks, "not_public")
     results = tls_checks.certificate_and_version(probe, host, address, now)
     results.append(tls_checks.legacy(probe, host, address))

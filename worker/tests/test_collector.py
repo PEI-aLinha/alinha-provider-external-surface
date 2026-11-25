@@ -55,6 +55,14 @@ def test_www_that_does_not_resolve_is_left_out_but_an_extra_host_is_unknown():
     assert {c["details"]["reason"] for c in result["hosts"][1]["checks"]} == {"no_address"}
 
 
+def test_a_name_that_does_not_exist_is_like_one_that_does_not_resolve():
+    missing = FakeHost(address=CollectorError("host_not_found", "x"))
+    probe = FakeProbe({D: secure_host(), f"www.{D}": missing, "loja.acme.pt": missing})
+    result = run(probe=probe, scope={"hosts": ["loja.acme.pt"]})
+    assert [h["host"] for h in result["hosts"]] == [D, "loja.acme.pt"]
+    assert {c["details"]["reason"] for c in result["hosts"][1]["checks"]} == {"no_address"}
+
+
 def test_a_host_on_a_private_address_is_not_contacted():
     private = FakeHost(address=CollectorError("host_not_allowed", "x"))
     probe = FakeProbe({D: private})
