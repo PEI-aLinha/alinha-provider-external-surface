@@ -190,6 +190,21 @@ class ExternalSurfaceIntegrationTest {
     }
 
     @Test
+    fun `a failure that arrives after deactivating changes nothing`() {
+        activate()
+        val abandoned = lastJob().id
+        call("responsible") { mvc.delete("$BASE/monitoring") { it() } }.andExpect { status { isNoContent() } }
+
+        fail(abandoned, "domain_not_found")
+
+        call("responsible") { mvc.get("$BASE/monitoring") { it() } }.andExpect {
+            jsonPath("$.status") { value(null) }
+            jsonPath("$.lastError") { value(null) }
+        }
+        assertThat(audit("external-surface.collection-failed")).isEmpty()
+    }
+
+    @Test
     fun `turning the checks off and on again waits for the check now cooldown`() {
         activate()
         complete(lastJob().id, result())
