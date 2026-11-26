@@ -239,7 +239,8 @@ class MonitoringService(
     /** Records why the current job failed. [errorCode] comes from the worker: only its shape is kept. */
     @Transactional
     fun applyFailure(jobId: UUID, errorCode: String) {
-        val surface = surfaces.findFirstBy()?.takeIf { it.lastJobId == jobId } ?: return
+        // Not active: the checks were turned off and the job abandoned, as in applyResult.
+        val surface = surfaces.findFirstBy()?.takeIf { it.lastJobId == jobId && it.active } ?: return
         if (surface.status != MonitoringStatus.PENDING) return
         fail(surface, jobId, errorCode.takeIf { HostNames.ERROR_CODE.matches(it) } ?: GENERIC_ERROR)
     }
