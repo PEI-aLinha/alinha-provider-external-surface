@@ -32,9 +32,9 @@ def inspecting_context() -> ssl.SSLContext:
 
     Verification is off on purpose: the verifying handshake already failed and reported the certificate; this one
     only reads which TLS version the host negotiates. The session is closed without sending anything."""
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)  # NOSONAR: inspection only, see the docstring
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     context.check_hostname = False
-    context.verify_mode = ssl.CERT_NONE  # NOSONAR: inspection only, see the docstring
+    context.verify_mode = ssl.CERT_NONE
     context.minimum_version = ssl.TLSVersion.TLSv1_2
     return context
 
@@ -47,12 +47,12 @@ def legacy_context() -> ssl.SSLContext | None:
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
-            context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)  # NOSONAR: legacy probe, see the docstring
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             context.check_hostname = False
-            context.verify_mode = ssl.CERT_NONE  # NOSONAR: legacy probe, see the docstring
-            context.minimum_version = ssl.TLSVersion.TLSv1  # NOSONAR: legacy probe, see the docstring
-            context.maximum_version = ssl.TLSVersion.TLSv1_1  # NOSONAR: legacy probe, see the docstring
-            context.set_ciphers("DEFAULT:@SECLEVEL=0")  # NOSONAR: legacy probe, see the docstring
+            context.verify_mode = ssl.CERT_NONE
+            context.minimum_version = ssl.TLSVersion.TLSv1
+            context.maximum_version = ssl.TLSVersion.TLSv1_1
+            context.set_ciphers("DEFAULT:@SECLEVEL=0")
         return context
     except (ValueError, ssl.SSLError):
         return None
