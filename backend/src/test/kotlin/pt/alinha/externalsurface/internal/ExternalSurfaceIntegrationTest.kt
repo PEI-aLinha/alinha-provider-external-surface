@@ -178,14 +178,34 @@ class ExternalSurfaceIntegrationTest {
         assertThat(countEvidence()).isZero()
         assertThat(announcedFor(tenant)).isEmpty()
 
-        // Activating again, even right away, starts a new check and says so.
+        // Active again right away: the abandoned check counts for the cooldown, and its result is still ignored.
         activate().andExpect {
-            status { isAccepted() }
-            jsonPath("$.status") { value("PENDING") }
+            status { isOk() }
+            jsonPath("$.status") { value(null) }
         }
-        assertThat(myJobs()).hasSize(2)
+        assertThat(myJobs()).hasSize(1)
         complete(abandoned, result())
         assertThat(countEvidence()).isZero()
+        assertThat(announcedFor(tenant)).isEmpty()
+    }
+
+    @Test
+    fun `turning the checks off and on again waits for the check now cooldown`() {
+        activate()
+        complete(lastJob().id, result())
+        call("responsible") { mvc.delete("$BASE/monitoring") { it() } }.andExpect { status { isNoContent() } }
+
+        activate().andExpect {
+            status { isOk() }
+            jsonPath("$.active") { value(true) }
+            jsonPath("$.status") { value("ACTIVE") }
+        }
+        assertThat(myJobs()).hasSize(1)
+        assertThat(nextRunAt()).isBetween(Instant.now().plusSeconds(8 * 60), Instant.now().plusSeconds(11 * 60))
+
+        makeDue()
+        outsideRequest { scheduler.runDue() }
+        assertThat(myJobs()).hasSize(2)
     }
 
     // -- extra hosts --------------------------------------------------------------------------------------------

@@ -70,9 +70,13 @@ class MonitoringService(
             "external-surface.activated", ENTITY_TYPE, surface.id.toString(),
             mapOf("authorized" to true, "domain" to domain, "hosts" to surface.extraHosts),
         )
+        // Turning the checks off and on again does not skip the "check now" cooldown: the first check waits for it.
+        val cooldownEnd = surface.collectingSince?.plus(MANUAL_COOLDOWN)?.takeIf { it.isAfter(now) }
         val tenantId = tenants.current().value
-        if (!schedules.existsById(tenantId)) schedules.save(SurfaceScheduleEntity(tenantId, now.plus(SCHEDULE_INTERVAL)))
-        val started = !surface.isCollecting(now, COLLECTION_DEADLINE)
+        if (!schedules.existsById(tenantId)) {
+            schedules.save(SurfaceScheduleEntity(tenantId, cooldownEnd ?: now.plus(SCHEDULE_INTERVAL)))
+        }
+        val started = cooldownEnd == null && !surface.isCollecting(now, COLLECTION_DEADLINE)
         if (started) startCollection(surface, domain, now, scheduled = false)
         // A concurrent activation fails here (unique tenant row, @Version) instead of starting a second check.
         surfaces.flush()
