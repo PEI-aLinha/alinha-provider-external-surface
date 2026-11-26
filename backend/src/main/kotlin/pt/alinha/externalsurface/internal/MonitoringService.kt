@@ -72,10 +72,11 @@ class MonitoringService(
         )
         val tenantId = tenants.current().value
         if (!schedules.existsById(tenantId)) schedules.save(SurfaceScheduleEntity(tenantId, now.plus(SCHEDULE_INTERVAL)))
-        if (!surface.isCollecting(now, COLLECTION_DEADLINE)) startCollection(surface, domain, now, scheduled = false)
+        val started = !surface.isCollecting(now, COLLECTION_DEADLINE)
+        if (started) startCollection(surface, domain, now, scheduled = false)
         // A concurrent activation fails here (unique tenant row, @Version) instead of starting a second check.
         surfaces.flush()
-        return toView(surface, domain) to true
+        return toView(surface, domain) to started
     }
 
     /**
