@@ -313,6 +313,17 @@ class ExternalSurfaceIntegrationTest {
     }
 
     @Test
+    fun `another tenant cannot read this tenant's evidence by its id`() {
+        activate()
+        complete(lastJob().id, result())
+        val evidenceId = announcedFor(tenant).first().evidenceId
+        assertThat(tenants.runAs(tenantId()) { api.evidence(evidenceId) }).isNotNull()
+
+        newTenant()
+        assertThat(tenants.runAs(tenantId()) { api.evidence(evidenceId) }).isNull()
+    }
+
+    @Test
     fun `another plugin's job is ignored`() {
         activate()
         val job = lastJob().id
