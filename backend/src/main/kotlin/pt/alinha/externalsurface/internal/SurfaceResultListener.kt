@@ -42,7 +42,17 @@ class SurfaceResultListener(
             // An async listener's exception is only logged by the executor: mark the check failed instead of leaving
             // it PENDING. The log has the job id, never the result (untrusted, may be large).
             log.error("could not apply the result of job {}", event.jobId, e)
+            markFailed(event)
+        }
+    }
+
+    /** The fallback runs for the same reason the first attempt failed (the database is down): it must not throw. */
+    private fun markFailed(event: JobCompleted) {
+        try {
             tenants.runAs(event) { tx.executeWithoutResult { service.applyFailure(event.jobId, MonitoringService.GENERIC_ERROR) } }
+        } catch (e: RuntimeException) {
+            // The check stays PENDING until its deadline passes and a new one can replace it.
+            log.error("could not mark job {} failed either: the check stays pending until it times out", event.jobId, e)
         }
     }
 

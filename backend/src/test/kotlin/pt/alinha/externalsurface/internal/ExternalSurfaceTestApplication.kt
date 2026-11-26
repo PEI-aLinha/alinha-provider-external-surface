@@ -61,8 +61,13 @@ class FakeJobDispatcher(private val tenants: TenantContext) : JobDispatcher {
 /** Results the test puts in, per (tenant, job), like the real tenant-filtered store. */
 class FakeJobResults(private val tenants: TenantContext) : JobResults {
     val results = ConcurrentHashMap<Pair<TenantId, UUID>, JobResult>()
+    /** Jobs whose result cannot be read, as when the database fails while the listener applies it. */
+    val broken: MutableSet<UUID> = ConcurrentHashMap.newKeySet()
 
-    override fun find(jobId: UUID): JobResult? = results[tenants.current() to jobId]
+    override fun find(jobId: UUID): JobResult? {
+        if (jobId in broken) throw IllegalStateException("database unavailable")
+        return results[tenants.current() to jobId]
+    }
 }
 
 /** The organization plugin's api, per tenant like the real one: [domains] holds each tenant's domain. */

@@ -380,6 +380,24 @@ class ExternalSurfaceIntegrationTest {
         call("responsible") { mvc.get("$BASE/monitoring") { it() } }.andExpect { jsonPath("$.lastError") { value("collector_error") } }
     }
 
+    @Test
+    fun `a result that cannot be applied marks the check failed instead of leaving it pending`() {
+        activate()
+        val job = lastJob().id
+        results.broken += job
+        try {
+            complete(job, result())
+        } finally {
+            results.broken -= job
+        }
+
+        call("responsible") { mvc.get("$BASE/monitoring") { it() } }.andExpect {
+            jsonPath("$.status") { value("FAILED") }
+            jsonPath("$.lastError") { value("collector_error") }
+        }
+        assertThat(countEvidence()).isZero()
+    }
+
     // -- check now and the schedule -----------------------------------------------------------------------------
 
     @Test
