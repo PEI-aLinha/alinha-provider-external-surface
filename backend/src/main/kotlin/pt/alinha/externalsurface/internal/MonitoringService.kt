@@ -78,13 +78,18 @@ class MonitoringService(
         return toView(surface, domain) to true
     }
 
-    /** Stops the daily checks. The extra hosts and the results already collected stay. */
+    /**
+     * Stops the daily checks and abandons one still running. The extra hosts and the results already collected stay.
+     */
     @Transactional
     fun deactivate() {
         val surface = surfaces.findFirstBy()?.takeIf { it.active } ?: throw NotActive()
-        surface.deactivate()
+        val abandoned = surface.deactivate()
         schedules.findById(tenants.current().value).ifPresent(schedules::delete)
-        audit.record("external-surface.deactivated", ENTITY_TYPE, surface.id.toString())
+        audit.record(
+            "external-surface.deactivated", ENTITY_TYPE, surface.id.toString(),
+            abandoned?.let { mapOf("abandonedJobId" to it.toString()) }.orEmpty(),
+        )
     }
 
     /** Replaces the extra hosts. Each must be a subdomain of the profile's domain; www is always checked anyway. */
@@ -158,7 +163,8 @@ class MonitoringService(
      */
     @Transactional
     fun applyResult(jobId: UUID, result: Map<String, Any?>?) {
-        val surface = surfaces.findFirstBy()?.takeIf { it.lastJobId == jobId } ?: return
+        // Not active: the checks were turned off, nothing more is stored about the organization's hosts.
+        val surface = surfaces.findFirstBy()?.takeIf { it.lastJobId == jobId && it.active } ?: return
         // Already applied (stored, or failed as invalid): a replayed event changes nothing.
         if (surface.status != MonitoringStatus.PENDING || evidence.existsByJobId(jobId)) return
         val domain = surface.collectingDomain ?: return

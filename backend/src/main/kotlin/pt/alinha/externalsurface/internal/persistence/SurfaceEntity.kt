@@ -87,8 +87,15 @@ class SurfaceEntity(@Id val id: UUID) : TenantOwnedEntity() {
         activatedAt = at
     }
 
-    fun deactivate() {
+    /**
+     * Stops the checks. A check still running is abandoned, so its late result is never stored nor announced:
+     * returns that job, if any.
+     */
+    fun deactivate(): UUID? {
         active = false
+        if (status != MonitoringStatus.PENDING) return null
+        status = if (collectedJobId != null) MonitoringStatus.ACTIVE else null
+        return lastJobId
     }
 
     fun collecting(jobId: UUID, domain: String, hosts: List<String>, at: Instant, scheduled: Boolean) {

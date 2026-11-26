@@ -165,6 +165,29 @@ class ExternalSurfaceIntegrationTest {
         }
     }
 
+    @Test
+    fun `deactivating abandons a running check, whose late result is neither stored nor announced`() {
+        activate()
+        val abandoned = lastJob().id
+
+        call("responsible") { mvc.delete("$BASE/monitoring") { it() } }.andExpect { status { isNoContent() } }
+        call("responsible") { mvc.get("$BASE/monitoring") { it() } }.andExpect { jsonPath("$.status") { value(null) } }
+        assertThat(audit("external-surface.deactivated")).singleElement().asString().contains(abandoned.toString())
+
+        complete(abandoned, result())
+        assertThat(countEvidence()).isZero()
+        assertThat(announcedFor(tenant)).isEmpty()
+
+        // Activating again, even right away, starts a new check and says so.
+        activate().andExpect {
+            status { isAccepted() }
+            jsonPath("$.status") { value("PENDING") }
+        }
+        assertThat(myJobs()).hasSize(2)
+        complete(abandoned, result())
+        assertThat(countEvidence()).isZero()
+    }
+
     // -- extra hosts --------------------------------------------------------------------------------------------
 
     @Test
