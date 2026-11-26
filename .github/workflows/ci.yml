@@ -14,8 +14,11 @@ permissions:
 
 jobs:
   ci:
-    uses: PEI-aLinha/alinha/.github/workflows/plugin-ci.yml@main
+    # Coordinated change with PEI-aLinha/alinha (job_consumer net module, OpenAPI contract, pnpm-lock.yaml): test
+    # against the main repo's branch of the same name. Back to @main, without main-ref, before merging.
+    uses: PEI-aLinha/alinha/.github/workflows/plugin-ci.yml@feat/external-surface-provider
     with:
+      main-ref: feat/external-surface-provider
       plugin-path: plugins/provider/external-surface
       gradle-project: external-surface
       npm-package: "@alinha/plugin-external-surface"

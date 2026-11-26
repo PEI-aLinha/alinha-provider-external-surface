@@ -1,0 +1,5 @@
+# Runtime dependencies the tests import, installed by plugin CI next to .github/plugin-ci/worker-requirements-test.txt.
+# Regenerate requirements-test.txt after a change:
+#   uv pip compile --generate-hashes --python-version 3.12 --python-platform linux --no-header \
+#     requirements-test.in -o requirements-test.txt
+dnspython>=2.6,<3

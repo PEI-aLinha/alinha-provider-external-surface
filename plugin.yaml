@@ -5,6 +5,20 @@ kind: provider
 version: 0.1.0
 # Where this repo lives as a submodule inside the main repo (PEI-aLinha/alinha)
 path: plugins/provider/external-surface
-publishes: []     # events it publishes (e.g. AssessmentSubmitted)
-consumes: []      # events it consumes
-permissions: []   # RBAC resources (e.g. assessment:read, assessment:edit)
+publishes: [EvidenceCollected]        # pt.alinha.pluginapi (plugin-api), one per stored evidence mapped to controls
+consumes: [JobCompleted, JobFailed]   # results of the evidence.collect jobs this plugin dispatched
+permissions:      # RBAC resources; role mapping lives in ExternalSurfacePlugin.kt
+  - external-surface:read       # responsible, analyst, consultant: state and results
+  - external-surface:manage     # responsible, consultant: extra hosts, check now, deactivate
+  - external-surface:activate   # responsible: authorize the checks of the organization's domain
+nav:              # menu entries; GET /api/plugins shows each one only to roles with its permission
+  - label: "Superfície externa"
+    path: integrations/external-surface
+    area: client
+    resource: external-surface   # checked as external-surface:read
+    order: 71
+  - label: "Superfície externa"
+    path: integrations/external-surface
+    area: consultant
+    resource: external-surface
+    order: 71
