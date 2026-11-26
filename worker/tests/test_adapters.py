@@ -53,7 +53,8 @@ def test_no_answer_at_all_is_unavailable(monkeypatch, error):
 
 def test_net_probe_goes_through_the_shared_network_module(monkeypatch):
     calls = []
-    monkeypatch.setattr(net, "public_address", lambda host, port: calls.append(("address", host, port)) or "8.8.8.8")
+    monkeypatch.setattr(net, "public_addresses",
+                        lambda host, port: calls.append(("address", host, port)) or ("8.8.8.8", "2606:4700::1"))
     monkeypatch.setattr(net, "tls_handshake", lambda *a, **k: calls.append(("tls", a[0], k["timeout"])) or "tls")
     monkeypatch.setattr(net, "pinned_https_get",
                         lambda host, address, path, headers, **k: calls.append(("get", path, headers["User-Agent"],
@@ -61,7 +62,7 @@ def test_net_probe_goes_through_the_shared_network_module(monkeypatch):
     monkeypatch.setattr(net, "pinned_http_location", lambda host, address, **k: calls.append(("http", host)) or (301, None))
     probe = NetProbe(timeout=3)
 
-    assert probe.address("acme.pt") == "8.8.8.8"
+    assert probe.address("acme.pt") == ("8.8.8.8", "2606:4700::1")  # every address, so a connection can fall back
     assert probe.handshake("acme.pt", "8.8.8.8", None) == "tls"
     assert probe.get("acme.pt", "8.8.8.8", "/", 0) == "page"
     assert probe.location("acme.pt", "8.8.8.8") == (301, None)

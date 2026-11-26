@@ -7,7 +7,7 @@ from datetime import datetime
 from urllib.parse import urlsplit
 
 from alinha_job_consumer.collectors import CollectorError, TransientError
-from alinha_job_consumer.net import Response
+from alinha_job_consumer.net import Address, Response
 
 from . import parsers
 from .model import CheckResult, failed, passed, unknown
@@ -19,7 +19,7 @@ HOME_MAX_BYTES = 0  # only the status and headers matter
 SECURITY_TXT_MAX_BYTES = 32 * 1024
 
 
-def https_redirect(probe: Probe, host: str, address: str) -> CheckResult:
+def https_redirect(probe: Probe, host: str, address: Address) -> CheckResult:
     try:
         status, location = probe.location(host, address)
     except ConnectionRefusedError:
@@ -31,7 +31,7 @@ def https_redirect(probe: Probe, host: str, address: str) -> CheckResult:
     return failed("https_redirect", status=status)
 
 
-def _home(probe: Probe, host: str, address: str, hosts: set[str]) -> Response:
+def _home(probe: Probe, host: str, address: Address, hosts: set[str]) -> Response:
     """The home page's answer, after at most one redirect to https on a host of this check."""
     answer = probe.get(host, address, "/", HOME_MAX_BYTES)
     target = urlsplit(answer.headers.get("location", "")) if answer.status in REDIRECTS else None
@@ -43,7 +43,7 @@ def _home(probe: Probe, host: str, address: str, hosts: set[str]) -> Response:
     return answer
 
 
-def header_checks(probe: Probe, host: str, address: str, hosts: set[str]) -> list[CheckResult]:
+def header_checks(probe: Probe, host: str, address: Address, hosts: set[str]) -> list[CheckResult]:
     try:
         answer = _home(probe, host, address, hosts)
     except ssl.SSLError:
@@ -95,7 +95,7 @@ def evaluate_headers(headers: dict[str, str] | object) -> list[CheckResult]:
     return results
 
 
-def security_txt(probe: Probe, host: str, address: str, now: datetime) -> CheckResult:
+def security_txt(probe: Probe, host: str, address: Address, now: datetime) -> CheckResult:
     try:
         answer = probe.get(host, address, "/.well-known/security.txt", SECURITY_TXT_MAX_BYTES)
     except ssl.SSLError:

@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Callable
 
 from alinha_job_consumer.collectors import TransientError
+from alinha_job_consumer.net import Address
 
 from .model import CheckResult, failed, passed, unknown
 from .probe import Probe
@@ -82,7 +83,7 @@ def _version_result(version: str) -> CheckResult:
     return passed("tls_version", version=code) if version in MODERN else failed("tls_version", version=code)
 
 
-def certificate_and_version(probe: Probe, host: str, address: str, now: datetime) -> list[CheckResult]:
+def certificate_and_version(probe: Probe, host: str, address: Address, now: datetime) -> list[CheckResult]:
     try:
         info = probe.handshake(host, address, verifying_context())
     except ssl.SSLCertVerificationError as error:
@@ -102,7 +103,7 @@ def certificate_and_version(probe: Probe, host: str, address: str, now: datetime
     return [certificate, _version_result(info.version)]
 
 
-def _version_only(probe: Probe, host: str, address: str) -> CheckResult:
+def _version_only(probe: Probe, host: str, address: Address) -> CheckResult:
     try:
         return _version_result(probe.handshake(host, address, inspecting_context()).version)
     except ssl.SSLError:
@@ -111,7 +112,7 @@ def _version_only(probe: Probe, host: str, address: str) -> CheckResult:
         return unknown("tls_version", "unreachable")
 
 
-def legacy(probe: Probe, host: str, address: str,
+def legacy(probe: Probe, host: str, address: Address,
            context_factory: Callable[[], ssl.SSLContext | None] = legacy_context) -> CheckResult:
     context = context_factory()
     if context is None:
